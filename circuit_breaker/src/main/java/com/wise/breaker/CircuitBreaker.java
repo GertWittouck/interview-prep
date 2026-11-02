@@ -61,9 +61,7 @@ public class CircuitBreaker {
 
         synchronized void recordFailure(int now) {
             failureTimes.addLast(now);
-            while (now - failureTimes.peekFirst() >= WINDOW_MINUTES) {
-                failureTimes.pollFirst();
-            }
+            failureTimes.removeIf(failureTime -> now - failureTime >= WINDOW_MINUTES);
 
             if (failureTimes.size() >= MAX_FAILURES) {
                 openUntil = now + OPEN_MINUTES;
