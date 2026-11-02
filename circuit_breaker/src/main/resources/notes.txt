@@ -1,0 +1,27 @@
+Circuit breaker (Wise pair programming interview, 2 November 2026)
+
+Service A calls services B and C. Each service runs on several hosts.
+
+- If a single host returns an internal server error or times out 3 times within the last 10 minutes,
+  calls to that host are paused: they throw an exception without calling the host.
+- After 5 minutes, calls are allowed through to that host again.
+- The method to write is: public Response execute(Request request)
+  - Request (provided) is an abstract class with a String host and an abstract Response call().
+  - Response (provided) is a class with an int status and a String body.
+  The breaker reads the host to find that host's state, then runs call() only if the circuit is closed.
+- Time comes from the provided Clock class (an int timeInMinutes with a getter and setter).
+  Tests move time forward with setTimeInMinutes; the code never reads the system time.
+
+Assumptions (say these out loud and check them with the interviewer):
+- The breaker is per host, so one broken B host doesn't block other B hosts or service C.
+- A response with status >= 500 is a server error and counts; it is still returned to the caller unchanged.
+- A timeout is a ServiceTimeoutException thrown by call(); it counts and is rethrown.
+- 4xx responses (e.g. 400 bad request) are the caller's fault and don't count.
+- "Within the last 10 minutes" means now - failureTime < 10, so a failure exactly 10 minutes ago no longer counts.
+- A successful call does not reset the failure count.
+- When the circuit opens, the failure history is cleared, so after 5 minutes the host starts with a clean slate.
+
+Possible extensions:
+- Half-open state: after the 5 minutes let one trial call through; if it fails, open again straight away.
+- Make the thresholds (3 failures, 10 minute window, 5 minute pause) configurable through the constructor.
+- In production, use Resilience4j rather than writing your own.

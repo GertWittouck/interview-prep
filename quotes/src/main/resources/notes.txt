@@ -1,0 +1,27 @@
+Write a QuoteService with a method that takes:
+- a source amount, for example 1000.00
+- a source currency, for example GBP
+- a target currency, for example EUR
+
+It returns a quote with:
+- the fee
+- the amount that gets converted, which is the source amount minus the fee
+
+ Source currency │ Fixed fee │        Variable fee        │
+├─────────────────┼───────────┼────────────────────────────┤
+│ GBP             │ 0.50      │ 0.35% of the source amount │
+├─────────────────┼───────────┼────────────────────────────┤
+│ EUR             │ 0.45      │ 0.41% of the source amount │
+├─────────────────┼───────────┼────────────────────────────┤
+│ USD             │ 1.00      │ 0.50% of the source amount │
+
+Example: you send 1000.00 GBP to EUR.
+- Fee = 0.50 + (1000.00 × 0.35%) = 0.50 + 3.50 = 4.00 GBP
+- Amount converted = 996.00 GBP
+
+Conversion rates, and what the recipient receives, come in a later part. For now, the quote only needs the fee and the amount converted.
+
+- Same currency: reject it. Sending GBP to GBP isn't a conversion, so throw a specific exception.
+- Both currencies required: yes, null means a validation error.
+- Negative or zero amount: reject both.
+- Precision: the input amount can have at most the currency's number of decimal places. For GBP, EUR and USD that's 2, so 10.005 GBP is invalid. Show the fee and the amount converted to 2 decimal places as well.
